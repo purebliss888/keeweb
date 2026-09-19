@@ -30,6 +30,7 @@ class SettingsFileView extends View {
         'click .settings__file-button-save-choose': 'toggleChooser',
         'click .settings__file-button-close': 'closeFile',
         'click .settings__file-save-to-file': 'saveToFile',
+        'click .settings__file-save-to-embedded': 'saveToEmbeddedHtml',
         'click .settings__file-save-to-xml': 'saveToXml',
         'click .settings__file-save-to-html': 'saveToHtml',
         'click .settings__file-save-to-storage': 'saveToStorage',
@@ -284,6 +285,55 @@ class SettingsFileView extends View {
                 }
             });
         }
+    }
+
+    saveToEmbeddedHtml(skipValidation) {
+        if (
+            skipValidation !== true &&
+            !this.validatePassword(this.saveToEmbeddedHtml.bind(this, true))
+        ) {
+            return;
+        }
+
+        this.model.getData((data) => {
+            if (!data) {
+                return;
+            }
+
+            const bytes = new Uint8Array(data);
+            const chars = new Array(bytes.length);
+
+            for (let i = 0; i < bytes.length; i++) {
+                chars[i] = String.fromCharCode(bytes[i]);
+            }
+
+            const base64 = btoa(chars.join(''));
+
+            const documentRoot = window.__keewebEmbeddedBaseDocument.cloneNode(true);
+
+            const body = documentRoot.querySelector('body');
+
+            body.innerHTML = `
+            <noscript>
+                <h1>KeeWeb</h1>
+                <p>KeeWeb is a password manager written in JavaScript. Please enable JavaScript to run it.</p>
+            </noscript>
+            <template id="keeweb-embedded-kdbx" data-name=""></template>
+        `;
+
+            const template = body.querySelector('#keeweb-embedded-kdbx');
+
+            template.setAttribute('data-name', this.model.name + '.kdbx');
+            template.innerHTML = base64;
+
+            const html = '<!DOCTYPE html>' + documentRoot.outerHTML;
+
+            const blob = new Blob([html], {
+                type: 'text/html;charset=utf-8'
+            });
+
+            FileSaver.saveAs(blob, this.model.name + '.html');
+        });
     }
 
     saveToXml() {

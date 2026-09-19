@@ -37,6 +37,8 @@ const ready = (Launcher && Launcher.ready) || $;
 ready(() => {
     StartProfiler.milestone('document ready');
 
+    window.__keewebEmbeddedBaseDocument = document.documentElement.cloneNode(true);
+
     const appModel = new AppModel();
     StartProfiler.milestone('creating app model');
 

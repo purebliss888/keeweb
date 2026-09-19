@@ -179,6 +179,56 @@ class OpenView extends View {
         });
     }
 
+    showEmbeddedFile() {
+        const template = document.getElementById('keeweb-embedded-kdbx');
+
+        if (!template || !template.content) {
+            return;
+        }
+
+        const base64 = template.content.textContent.trim();
+
+        if (!base64) {
+            return;
+        }
+
+        try {
+            const binary = atob(base64);
+            const data = new Uint8Array(binary.length);
+
+            for (let i = 0; i < binary.length; i++) {
+                data[i] = binary.charCodeAt(i);
+            }
+
+            this.params = {
+                id: null,
+                name: (template.getAttribute('data-name') || 'Embedded Database.kdbx').replace(
+                    /\.kdbx$/i,
+                    ''
+                ),
+                storage: null,
+                path: null,
+                keyFileName: null,
+                keyFileData: null,
+                keyFilePath: null,
+                fileData: data.buffer,
+                rev: null,
+                opts: null,
+                chalResp: null
+            };
+
+            this.encryptedPassword = null;
+
+            this.displayOpenFile();
+            this.displayOpenKeyFile();
+            this.displayOpenChalResp();
+            this.displayOpenDeviceOwnerAuth();
+            this.focusInput(true);
+        } catch (err) {
+            Logger.error('Error loading embedded database', err);
+        }
+    }
+
     getDisplayedPath(fileInfo) {
         const storage = fileInfo.storage;
         if (storage === 'file' || storage === 'webdav') {

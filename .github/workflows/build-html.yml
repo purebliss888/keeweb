@@ -1,0 +1,67 @@
+name: Manual KeeWeb HTML Release Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag"
+        required: true
+        default: "v1.0.0-custom"
+        type: string
+
+      release_name:
+        description: "Release name"
+        required: true
+        default: "KeeWeb HTML Vault"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint source
+        run: npm run lint
+
+      - name: Build KeeWeb web application
+        env: 
+          NODE_OPTIONS: --openssl-legacy-provider
+        run: npx --no-install grunt build-web-app --verbose
+
+      - name: Verify web build
+        run: |
+          test -f dist/index.html
+          test -s dist/index.html
+          find dist -maxdepth 2 -type f | sort
+
+      - name: Package web files
+        run: |
+          cd dist
+          zip -r ../keeweb-html-vault.zip .
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+
+          gh release create "${{ inputs.tag_name }}" \
+            --repo "${{ github.repository }}" \
+            --title "${{ inputs.release_name }}" \
+            --target "${{ github.sha }}" \
+            keeweb-html-vault.zip

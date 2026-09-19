@@ -169,6 +169,10 @@ class AppView extends View {
         this.hideImportCsv();
         this.views.open = new OpenView(this.model);
         this.views.open.render();
+        const embedded = document.getElementById('keeweb-embedded-kdbx');
+        if (embedded && embedded.content && embedded.content.textContent.trim()) {
+            this.views.open.showEmbeddedFile();
+        }
         this.views.open.on('close', () => {
             this.showEntries();
         });
@@ -176,8 +180,13 @@ class AppView extends View {
 
     showLastOpenFile() {
         this.showOpenFile();
+
+        const embedded = document.getElementById('keeweb-embedded-kdbx');
+        const hasEmbedded = embedded && embedded.content && embedded.content.textContent.trim();
+
         const lastOpenFile = this.model.fileInfos[0];
-        if (lastOpenFile) {
+
+        if (!hasEmbedded && lastOpenFile) {
             this.views.open.currentSelectedIndex = 0;
             this.views.open.showOpenFileInfo(lastOpenFile);
         }

@@ -29,6 +29,9 @@
             <i class="fa fa-file-alt"></i>{{Res 'file'}}
         </div>
         {{/ifneq}}
+        <div class="settings__file-save-to settings__file-save-to-embedded">
+            <i class="fa fa-file-alt"></i>html(with database)
+        </div>
         {{#each storageProviders as |prv|}}
             {{#unless prv.own}}
             <div class="settings__file-save-to settings__file-save-to-storage" data-storage="{{prv.name}}">
